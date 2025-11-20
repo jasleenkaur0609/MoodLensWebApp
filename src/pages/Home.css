@@ -1,0 +1,324 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #050009;
+    color: white;
+    overflow-x: hidden;
+}
+
+h1, h2, h3 {
+    font-weight: 600;
+}
+
+a {
+    text-decoration: none;
+}
+
+/* Fade-in animation */
+.fade {
+    opacity: 0;
+    animation: fadeIn 1.2s ease forwards;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+/* -------------------------------------------------------
+    NAVBAR
+---------------------------------------------------------*/
+.header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    padding: 20px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    background: rgba(10, 0, 20, 0.6);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.logo span {
+    color: #a855f7;
+}
+
+.header nav a {
+    margin-left: 30px;
+    color: #eee;
+    transition: 0.3s;
+}
+
+.header nav a:hover {
+    color: #c084fc;
+    text-shadow: 0 0 10px #c084fc;
+}
+
+.btn {
+    padding: 10px 20px;
+    background: #a855f7;
+    color: white !important;
+    border-radius: 8px;
+    transition: 0.3s ease;
+}
+
+.btn:hover {
+    background: #9333ea;
+    box-shadow: 0 0 15px #a855f7;
+}
+
+/* -------------------------------------------------------
+    HERO SECTION
+---------------------------------------------------------*/
+.hero {
+    padding-top: 140px;
+    text-align: center;
+    background: linear-gradient(135deg, #1a002e, #080010, #26002f);
+    padding-bottom: 120px;
+}
+
+.big-title {
+    font-size: 70px;
+    font-weight: 700;
+    background: linear-gradient(to right, #a855f7, #9333ea, #d946ef);
+    -webkit-background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+    animation: glow-text 2s infinite alternate;
+}
+
+@keyframes glow-text {
+    from { text-shadow: 0 0 20px #a855f7; }
+    to   { text-shadow: 0 0 40px #d946ef; }
+}
+
+.hero-sub {
+    max-width: 800px;
+    margin: 20px auto;
+    font-size: 20px;
+    opacity: 0.9;
+    line-height: 1.7;
+}
+
+.start-btn {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 18px 40px;
+    background: linear-gradient(135deg, #9333ea, #d946ef);
+    color: white;
+    border-radius: 40px;
+    font-size: 20px;
+    letter-spacing: 1px;
+    box-shadow: 0 0 20px #9333ea;
+    transition: 0.3s ease;
+    animation: pulse 2s infinite;
+}
+
+.start-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 40px #d946ef;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 20px #9333ea; }
+    50% { box-shadow: 0 0 40px #d946ef; }
+    100% { box-shadow: 0 0 20px #9333ea; }
+}
+
+.hero-img {
+    margin-top: 40px;
+    width: 90%;
+    max-width: 900px;
+    height: 320px;
+    background: url('https://images.unsplash.com/photo-1517694712202-14dd9538aa97') center/cover;
+    border-radius: 25px;
+    filter: drop-shadow(0 0 20px #8b5cf6);
+    animation: float 5s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-14px); }
+}
+
+/* -------------------------------------------------------
+    PROBLEM SECTION
+---------------------------------------------------------*/
+.problem {
+    padding: 120px 10%;
+    text-align: center;
+    background: #0c0013;
+}
+
+.problem h2 {
+    font-size: 45px;
+    margin-bottom: 25px;
+}
+
+.problem p {
+    font-size: 20px;
+    opacity: 0.85;
+    margin-bottom: 25px;
+}
+
+.highlight {
+    background: rgba(255, 0, 255, 0.12);
+    border: 1px solid rgba(255, 0, 255, 0.1);
+    padding: 18px;
+    border-radius: 12px;
+    display: inline-block;
+    margin-top: 20px;
+    color: #e879f9;
+}
+
+/* -------------------------------------------------------
+    FEATURES SECTION
+---------------------------------------------------------*/
+.features {
+    padding: 120px 10%;
+    background: #15001f;
+    text-align: center;
+}
+
+.features h2 {
+    font-size: 45px;
+    margin-bottom: 40px;
+}
+
+.feature-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 35px;
+}
+
+.f-card {
+    background: rgba(255,255,255,0.06);
+    padding: 30px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(6px);
+    transition: 0.3s ease;
+}
+
+.f-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 0 20px #9333ea;
+}
+
+/* -------------------------------------------------------
+    HOW IT WORKS
+---------------------------------------------------------*/
+.how {
+    padding: 120px 10%;
+    background: #0a0011;
+    text-align: center;
+}
+
+.steps {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 40px;
+}
+
+.step {
+    background: rgba(255,255,255,0.06);
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: 0.3s;
+}
+
+.step:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 0 20px #a855f7;
+}
+
+/* -------------------------------------------------------
+    BENEFITS
+---------------------------------------------------------*/
+.benefits {
+    background: #0f0018;
+    padding: 120px 10%;
+    text-align: center;
+}
+
+.benefit-list {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    font-size: 20px;
+    opacity: 0.85;
+}
+
+.benefit {
+    background: rgba(255,255,255,0.06);
+    border-left: 4px solid #a855f7;
+    padding: 15px 20px;
+    border-radius: 10px;
+}
+
+/* -------------------------------------------------------
+    ABOUT SECTION
+---------------------------------------------------------*/
+.about {
+    padding: 120px 10%;
+    background: #180023;
+    text-align: center;
+    line-height: 1.8;
+}
+
+.about h2 {
+    font-size: 45px;
+    margin-bottom: 30px;
+}
+
+.about p {
+    font-size: 20px;
+    opacity: 0.85;
+    margin-bottom: 20px;
+}
+
+/* -------------------------------------------------------
+    CTA SECTION
+---------------------------------------------------------*/
+.cta {
+    padding: 140px 10%;
+    background: linear-gradient(135deg, #33004b, #15001f);
+    text-align: center;
+}
+
+.cta h1 {
+    font-size: 55px;
+    margin-bottom: 35px;
+}
+
+.start-btn.big {
+    padding: 20px 50px;
+    font-size: 24px;
+}
+
+/* -------------------------------------------------------
+    FOOTER
+---------------------------------------------------------*/
+footer {
+    padding: 30px;
+    text-align: center;
+    background: #09000f;
+    color: #aaa;
+    font-size: 14px;
+}
