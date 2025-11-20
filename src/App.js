@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage'; // ✅ default import
 import AdminPage from './pages/AdminPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Musicselector from './pages/Musicselector';
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/musicselector" element={<Musicselector />} />
       </Routes>
     </Router>
   );

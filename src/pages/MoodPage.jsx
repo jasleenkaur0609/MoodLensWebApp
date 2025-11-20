@@ -1,17 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { auth, db } from "../utils/firebaseConfig";
 import { addDoc, collection, Timestamp } from "firebase/firestore";
 import * as faceapi from "@vladmandic/face-api";
 import { useNavigate } from "react-router-dom";
 import "./MoodPage.css";
 
-// Mood → Premium Soft Gradient Backgrounds
 const moodGradients = {
-  happy: "linear-gradient(135deg, #ffcf9f, #ffeca8)",   // peach → soft gold
-  sad: "linear-gradient(135deg, #5f82c6, #d4deef)",     // steel blue → mist gray
-  angry: "linear-gradient(135deg, #ff7a7a, #ffd0d0)",   // coral → rose mist
-  surprised: "linear-gradient(135deg, #a58bff, #e9e1ff)", // violet → ice lavender
-  neutral: "linear-gradient(135deg, #5c5c5c, #cfcfcf)", // graphite → silver
+  happy: "linear-gradient(135deg, #ff7f50, #ff6b3d)",
+  sad: "linear-gradient(135deg, #4b3f72, #6e5a99)",
+  angry: "linear-gradient(135deg, #8b2c2c, #b04141)",
+  surprised: "linear-gradient(135deg, #6b5b95, #8573a9)",
+  neutral: "linear-gradient(135deg, #3a3a3a, #5c5c5c)",
+  fearful: "linear-gradient(135deg, #4a4a4a, #7a7a7a)",
+  disgusted: "linear-gradient(135deg, #556b2f, #6b7f3f)",
 };
 
 const moodsList = ["happy", "sad", "angry", "surprised", "neutral"];
@@ -21,7 +22,10 @@ export default function MoodPage() {
   const [note, setNote] = useState("");
   const [detectedMood, setDetectedMood] = useState(null);
   const [source, setSource] = useState(null);
+  const [expressions, setExpressions] = useState(null);
+  const [aiSummary, setAiSummary] = useState("");
 
+  const videoRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,9 +44,17 @@ export default function MoodPage() {
 
   const startCamera = async () => {
     try {
-      const video = document.getElementById("camera");
+      const video = videoRef.current;
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       video.srcObject = stream;
+
+      await new Promise((resolve) => {
+        video.onloadedmetadata = () => resolve(true);
+      });
+
       video.play();
     } catch (err) {
       console.error("Camera error: ", err);
@@ -56,7 +68,8 @@ export default function MoodPage() {
   };
 
   const startFaceDetection = () => {
-    const video = document.getElementById("camera");
+    const video = videoRef.current;
+    const displaySize = { width: 480, height: 360 };
 
     setInterval(async () => {
       if (!video) return;
@@ -72,12 +85,14 @@ export default function MoodPage() {
         );
 
         setDetectedMood(mood);
+        setExpressions(expressions);
         setSource("face");
       } else {
         setDetectedMood(null);
+        setExpressions(null);
         setSource(null);
       }
-    }, 1000);
+    }, 30000); // detect every 30 sec
   };
 
   const saveMood = async () => {
@@ -99,16 +114,22 @@ export default function MoodPage() {
         note,
         timestamp: Timestamp.now(),
         source: selectedMoods.length ? "manual" : source,
+        aiSummary,
+        confidence: expressions, // Save confidence meter to DB
       });
 
       alert("Mood saved successfully!");
-
-      navigate("/music"); // Redirect only after success
-
+      navigate("/music");
     } catch (error) {
       console.error(error);
       alert("Failed to save mood");
     }
+  };
+
+  const generateAISummary = () => {
+    const moodText = detectedMood ? `You seem ${detectedMood}. ` : "";
+    const noteText = note ? `Note: ${note}` : "";
+    setAiSummary(moodText + noteText);
   };
 
   return (
@@ -120,22 +141,46 @@ export default function MoodPage() {
           : "linear-gradient(135deg, #1f1f1f, #3b3b3b)",
       }}
     >
-      <div className="aurora"></div>
-
       {/* LEFT SECTION */}
-      <div className="left-section">
-        <div className="camera-frame">
-          <video id="camera" autoPlay muted></video>
-        </div>
+      {/* LEFT SECTION */}
+<div className="left-section">
+  <div className="camera-frame">
+    <video ref={videoRef} autoPlay muted width={480} height={360}></video>
+  </div>
 
-        <div className="detected-mood-tag">
-          {detectedMood ? detectedMood.toUpperCase() : "Detecting..."}
-        </div>
-      </div>
+  {/* Breathing Circle */}
+  <div className="breathing-circle"></div>
+</div>
+
 
       {/* RIGHT SECTION */}
       <div className="right-section glass">
         <h1 className="title">Log Your Mood</h1>
+
+        {/* Live Mood */}
+        <div className="live-mood-tags">
+          <h4>Detected Mood:</h4>
+          <span className="mood-tag">
+            {detectedMood ? detectedMood.toUpperCase() : "Detecting..."}
+          </span>
+
+          {expressions && (
+            <div className="confidence-meter">
+              {Object.keys(expressions).map((exp) => (
+                <div key={exp} className="confidence-row">
+                  <span className="exp-label">{exp}</span>
+                  <div className="bar-container">
+                    <div
+                      className="bar"
+                      style={{ width: `${(expressions[exp] * 100).toFixed(0)}%` }}
+                    ></div>
+                  </div>
+                  <span className="exp-value">{(expressions[exp] * 100).toFixed(0)}%</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         <h3 className="sub">Optional Manual Mood Selection</h3>
         <div className="mood-options">
@@ -158,6 +203,12 @@ export default function MoodPage() {
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
+
+        <button className="ai-summary-btn" onClick={generateAISummary}>
+          Generate AI Summary
+        </button>
+
+        {aiSummary && <div className="ai-summary">{aiSummary}</div>}
 
         <button className="save-btn" onClick={saveMood}>
           Save Mood
