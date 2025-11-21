@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { auth, db } from "../utils/firebaseConfig";
 import { addDoc, collection, Timestamp } from "firebase/firestore";
 import * as faceapi from "@vladmandic/face-api";
+import * as tf from "@tensorflow/tfjs";
 import { useNavigate } from "react-router-dom";
 import "./MoodPage.css";
 
@@ -21,16 +22,20 @@ export default function MoodPage() {
   const [selectedMoods, setSelectedMoods] = useState([]);
   const [note, setNote] = useState("");
   const [detectedMood, setDetectedMood] = useState(null);
-  const [source, setSource] = useState(null);
   const [expressions, setExpressions] = useState(null);
   const [aiSummary, setAiSummary] = useState("");
 
   const videoRef = useRef(null);
+  const intervalRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     startCamera();
-    loadModels();
+    loadFaceAPI();
+
+    return () => {
+      stopCamera();
+    };
   }, []);
 
   const handleMoodChange = (e) => {
@@ -45,23 +50,25 @@ export default function MoodPage() {
   const startCamera = async () => {
     try {
       const video = videoRef.current;
-      if (video.srcObject) {
-        video.srcObject.getTracks().forEach(track => track.stop());
-      }
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       video.srcObject = stream;
-
-      await new Promise((resolve) => {
-        video.onloadedmetadata = () => resolve(true);
-      });
-
       video.play();
     } catch (err) {
-      console.error("Camera error: ", err);
+      console.error("Camera error:", err);
     }
   };
 
-  const loadModels = async () => {
+  const stopCamera = () => {
+    const video = videoRef.current;
+    if (video?.srcObject) {
+      video.srcObject.getTracks().forEach((track) => track.stop());
+      video.srcObject = null;
+    }
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
+
+  const loadFaceAPI = async () => {
+    await tf.setBackend("webgl").catch(() => tf.setBackend("cpu"));
     await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
     await faceapi.nets.faceExpressionNet.loadFromUri("/models");
     startFaceDetection();
@@ -69,67 +76,56 @@ export default function MoodPage() {
 
   const startFaceDetection = () => {
     const video = videoRef.current;
-    const displaySize = { width: 480, height: 360 };
-
-    setInterval(async () => {
+    intervalRef.current = setInterval(async () => {
       if (!video) return;
-
       const detection = await faceapi
         .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
         .withFaceExpressions();
 
-      if (detection) {
-        const expressions = detection.expressions;
-        const mood = Object.keys(expressions).reduce((a, b) =>
-          expressions[a] > expressions[b] ? a : b
+      if (detection?.expressions) {
+        const expressionsCopy = Object.fromEntries(
+          Object.entries(detection.expressions).map(([k, v]) => [k, Math.round(v * 100)])
         );
-
+        const mood = Object.keys(expressionsCopy).reduce(
+          (a, b) => (expressionsCopy[a] > expressionsCopy[b] ? a : b)
+        );
         setDetectedMood(mood);
-        setExpressions(expressions);
-        setSource("face");
-      } else {
-        setDetectedMood(null);
-        setExpressions(null);
-        setSource(null);
+        setExpressions(expressionsCopy);
       }
-    }, 30000); // detect every 30 sec
-  };
-
-  const saveMood = async () => {
-    const user = auth.currentUser;
-    if (!user) return alert("Login first");
-
-    const finalMood =
-      selectedMoods.length > 0
-        ? `${detectedMood || "none"} | ${selectedMoods.join(",")}`
-        : detectedMood;
-
-    if (!finalMood) return alert("No mood detected or selected!");
-
-    try {
-      await addDoc(collection(db, "mood"), {
-        userId: user.uid,
-        detectedMood,
-        selectedMoods: selectedMoods.length ? selectedMoods : [],
-        note,
-        timestamp: Timestamp.now(),
-        source: selectedMoods.length ? "manual" : source,
-        aiSummary,
-        confidence: expressions, // Save confidence meter to DB
-      });
-
-      alert("Mood saved successfully!");
-      navigate("/music");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to save mood");
-    }
+    }, 10000);
   };
 
   const generateAISummary = () => {
     const moodText = detectedMood ? `You seem ${detectedMood}. ` : "";
     const noteText = note ? `Note: ${note}` : "";
     setAiSummary(moodText + noteText);
+  };
+
+  const saveMood = async () => {
+    const user = auth.currentUser;
+    if (!user) return alert("Login first");
+
+    const finalMood = selectedMoods.length > 0 ? selectedMoods : detectedMood;
+    if (!finalMood) return alert("No mood detected or selected!");
+
+    try {
+      await addDoc(collection(db, "mood"), {
+        userId: user.uid,
+        detectedMood,
+        selectedMoods: selectedMoods,
+        note,
+        timestamp: Timestamp.now(),
+        source: selectedMoods.length > 0 ? "manual" : "face",
+        aiSummary,
+        confidence: expressions,
+      });
+
+      alert("Mood saved successfully!");
+      navigate("/musicselector", { state: { detectedMood } });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save mood");
+    }
   };
 
   return (
@@ -141,28 +137,19 @@ export default function MoodPage() {
           : "linear-gradient(135deg, #1f1f1f, #3b3b3b)",
       }}
     >
-      {/* LEFT SECTION */}
-      {/* LEFT SECTION */}
-<div className="left-section">
-  <div className="camera-frame">
-    <video ref={videoRef} autoPlay muted width={480} height={360}></video>
-  </div>
+      <div className="left-section">
+        <div className="camera-frame">
+          <video ref={videoRef} autoPlay muted width={480} height={360}></video>
+        </div>
+        <div className="breathing-circle"></div>
+      </div>
 
-  {/* Breathing Circle */}
-  <div className="breathing-circle"></div>
-</div>
-
-
-      {/* RIGHT SECTION */}
       <div className="right-section glass">
-        <h1 className="title">Log Your Mood</h1>
+        <h1>Log Your Mood</h1>
 
-        {/* Live Mood */}
         <div className="live-mood-tags">
           <h4>Detected Mood:</h4>
-          <span className="mood-tag">
-            {detectedMood ? detectedMood.toUpperCase() : "Detecting..."}
-          </span>
+          <span className="mood-tag">{detectedMood || "Detecting..."}</span>
 
           {expressions && (
             <div className="confidence-meter">
@@ -172,17 +159,17 @@ export default function MoodPage() {
                   <div className="bar-container">
                     <div
                       className="bar"
-                      style={{ width: `${(expressions[exp] * 100).toFixed(0)}%` }}
+                      style={{ width: `${expressions[exp]}%` }}
                     ></div>
                   </div>
-                  <span className="exp-value">{(expressions[exp] * 100).toFixed(0)}%</span>
+                  <span className="exp-value">{expressions[exp]}%</span>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        <h3 className="sub">Optional Manual Mood Selection</h3>
+        <h3>Optional Manual Mood Selection</h3>
         <div className="mood-options">
           {moodsList.map((m) => (
             <label key={m} className="mood-chip">

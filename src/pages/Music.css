@@ -1,0 +1,61 @@
+.music-wrapper {
+  padding: 2rem;
+  font-family: "Poppins", sans-serif;
+  min-height: 100vh;
+  color: white;
+  transition: background 1s ease-in-out;
+}
+
+.current-mood {
+  font-weight: bold;
+  text-transform: capitalize;
+  color: #ffb347;
+}
+
+.mood-suggestion {
+  font-style: italic;
+  margin-bottom: 1rem;
+  color: #ffd966;
+}
+
+.lang-buttons button {
+  margin: 0.5rem;
+  padding: 0.8rem 1.2rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.2s ease-in-out;
+}
+
+.lang-buttons button.active,
+.lang-buttons button:hover {
+  background: #ff7f50;
+  transform: scale(1.05);
+}
+
+.song-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.song-card {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.song-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.player {
+  margin-top: 2rem;
+  text-align: center;
+}
