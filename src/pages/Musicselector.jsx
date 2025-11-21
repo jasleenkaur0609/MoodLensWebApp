@@ -4,14 +4,23 @@ import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { db, auth } from "../utils/firebaseConfig";
 import "./Music.css";
 
-const songGradients = [
-  "linear-gradient(135deg, #ff7f50, #ff6b3d)",
-  "linear-gradient(135deg, #4b3f72, #6e5a99)",
-  "linear-gradient(135deg, #8b2c2c, #b04141)",
-  "linear-gradient(135deg, #6b5b95, #8573a9)",
-  "linear-gradient(135deg, #3a3a3a, #5c5c5c)",
-  "linear-gradient(135deg, #556b2f, #6b7f3f)",
-];
+const moodColors = {
+  happy: "#ffd7a8",
+  sad: "#c7d7ff",
+  neutral: "#d7b2b2ff",
+  angry: "#ffb3b3",
+  calm: "#c9ffd8",
+  energetic: "#ffe28a",
+};
+
+const moodIcons = {
+  happy: "😊",
+  sad: "😔",
+  neutral: "😐",
+  angry: "😡",
+  calm: "🌿",
+  energetic: "⚡",
+};
 
 export default function MusicSelector() {
   const { state } = useLocation();
@@ -20,17 +29,24 @@ export default function MusicSelector() {
   const [language, setLanguage] = useState(null);
   const [songs, setSongs] = useState([]);
   const [selectedSong, setSelectedSong] = useState(null);
-  const [suggestion, setSuggestion] = useState("");
-  const [bgGradient, setBgGradient] = useState(
-    "linear-gradient(135deg, #1f1f1f, #2e2e2e)"
-  );
+  const [suggestionPara, setSuggestionPara] = useState("");
+  const [suggestionPoints, setSuggestionPoints] = useState([]);
+  const [bgColor, setBgColor] = useState("#f0f0f0");
 
-  // Fetch songs & suggestions when language or detectedMood changes
+  // Update pastel background smoothly
   useEffect(() => {
-    if (!detectedMood) return;
-    fetchSuggestion(detectedMood);
+    if (detectedMood) setBgColor(moodColors[detectedMood] || "#f0f0f0");
     if (language) fetchSongs(detectedMood, language);
+    fetchSuggestion(detectedMood);
   }, [detectedMood, language]);
+
+  // Animate background when song changes
+  useEffect(() => {
+    if (selectedSong) {
+      const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
+      setBgColor(randomColor);
+    }
+  }, [selectedSong]);
 
   const fetchSongs = async (mood, lang) => {
     try {
@@ -39,8 +55,9 @@ export default function MusicSelector() {
         where("mood", "==", mood),
         where("language", "==", lang)
       );
+
       const snapshot = await getDocs(q);
-      const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setSongs(list);
     } catch (err) {
       console.error("Error fetching songs:", err);
@@ -49,41 +66,33 @@ export default function MusicSelector() {
 
   const fetchSuggestion = async (mood) => {
     try {
-      const q = query(
-        collection(db, "moodSuggestions"),
-        where("mood", "==", mood)
-      );
+      const q = query(collection(db, "moodSuggestions"), where("mood", "==", mood));
       const snapshot = await getDocs(q);
       if (!snapshot.empty) {
-        setSuggestion(snapshot.docs[0].data().suggestion);
-      } else {
-        setSuggestion("No suggestions available for this mood.");
+        const data = snapshot.docs[0].data();
+        setSuggestionPara(data.paragraph || "");
+        setSuggestionPoints(data.points || []);
       }
     } catch (err) {
       console.error("Error fetching suggestion:", err);
     }
   };
 
-  const handleSongSelect = async (song, index) => {
+  const handleSongSelect = async (song) => {
     setSelectedSong(song);
-    setBgGradient(songGradients[index % songGradients.length]);
-
     const user = auth.currentUser;
     if (!user) return alert("Login first");
 
     try {
-      const moodData = {
+      await addDoc(collection(db, "mood"), {
         userId: user.uid,
         detectedMood,
-        selectedMoods: [detectedMood],
-        timestamp: new Date(),
-        source: "auto",
         selectedLanguage: language,
         selectedSong: song.youtubeUrl,
-      };
-      if (confidence !== undefined) moodData.confidence = confidence;
-
-      await addDoc(collection(db, "mood"), moodData);
+        timestamp: new Date(),
+        source: "auto",
+        confidence: confidence ?? null,
+      });
     } catch (err) {
       console.error("Error saving selected song:", err);
     }
@@ -91,60 +100,68 @@ export default function MusicSelector() {
 
   const getEmbedUrl = (url) => {
     if (!url) return null;
-    return url.replace("watch?v=", "embed/") + "?autoplay=1&controls=1&showinfo=0";
+    const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+    if (!match) return null;
+    return `https://www.youtube.com/embed/${match[1]}?autoplay=1&controls=0&mute=0`;
   };
 
   return (
-    <div className="music-wrapper" style={{ background: bgGradient }}>
-      <h2>
-        Your Mood:{" "}
-        <span className="current-mood">
-          {detectedMood || "Detecting..."}
-        </span>
-      </h2>
-      {suggestion && <p className="mood-suggestion">{suggestion}</p>}
+    <div className="music-wrapper" style={{ background: bgColor }}>
+      <div className="blob-layer"></div>
+      <div className="bubble-layer"></div>
+      <div className="aurora-layer"></div>
 
-      <h3>Select a language:</h3>
-      <div className="lang-buttons">
-        {["Hindi", "English", "Punjabi"].map((l) => (
-          <button
-            key={l}
-            className={language === l ? "active" : ""}
-            onClick={() => setLanguage(l)}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
+      <div className="main-container">
+        {/* LEFT PANEL */}
+        <div className="left-panel mixed-card">
+          <h2 className="current-mood">
+            <span className="mood-icon">{moodIcons[detectedMood]}</span>
+            {detectedMood}
+          </h2>
 
-      {songs.length > 0 && (
-        <div className="song-list">
-          {songs.map((song, index) => (
-            <div
-              key={song.id}
-              className="song-card"
-              onClick={() => handleSongSelect(song, index)}
-            >
-              <h4>{song.title}</h4>
-              {song.artist && <p>{song.artist}</p>}
+          <div className="suggestion-card">
+            <p className="suggestion-para">{suggestionPara}</p>
+            <ul className="suggestion-points">
+              {suggestionPoints.map((p, i) => <li key={i}>{p}</li>)}
+            </ul>
+          </div>
+        </div>
+
+        {/* RIGHT PANEL */}
+        <div className="right-panel">
+          <div className="language-card mixed-card">
+            <h3>Select Language</h3>
+            <div className="lang-buttons">
+              {["Hindi", "English", "Punjabi"].map(l => (
+                <button key={l} className={language === l ? "active" : ""} onClick={() => setLanguage(l)}>
+                  {l}
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          </div>
 
-      {selectedSong && (
-        <div className="player">
-          <iframe
-            width="300"
-            height="60"
-            src={getEmbedUrl(selectedSong.youtubeUrl)}
-            title="YouTube audio"
-            frameBorder="0"
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-          ></iframe>
+          {songs.length > 0 && (
+            <div className="song-card mixed-card">
+              <h3>Songs for you</h3>
+              {songs.map(song => (
+                <div key={song.id} className="song-item" onClick={() => handleSongSelect(song)}>
+                  <h4>{song.title}</h4>
+                  {song.artist && <p>{song.artist}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {selectedSong && (
+            <div className="player-card mixed-card">
+              <iframe src={getEmbedUrl(selectedSong.youtubeUrl)} title="YouTube audio" allow="autoplay" className="small-player"></iframe>
+              <div className="equalizer">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

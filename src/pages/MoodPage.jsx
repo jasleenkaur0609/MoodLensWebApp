@@ -28,71 +28,84 @@ export default function MoodPage() {
   const videoRef = useRef(null);
   const intervalRef = useRef(null);
   const navigate = useNavigate();
+  const [cameraLoaded, setCameraLoaded] = useState(false);
 
+  // ====================== CAMERA & FACEAPI ======================
   useEffect(() => {
     startCamera();
     loadFaceAPI();
 
-    return () => {
-      stopCamera();
-    };
+    return () => stopCamera();
   }, []);
-
-  const handleMoodChange = (e) => {
-    const value = e.target.value;
-    setSelectedMoods((prev) =>
-      prev.includes(value)
-        ? prev.filter((m) => m !== value)
-        : [...prev, value]
-    );
-  };
 
   const startCamera = async () => {
     try {
       const video = videoRef.current;
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       video.srcObject = stream;
-      video.play();
+      video.onloadedmetadata = () => {
+        if (video.paused) video.play().catch(err => console.warn("Video play interrupted:", err));
+      };
+      setCameraLoaded(true);
     } catch (err) {
       console.error("Camera error:", err);
+      alert("Failed to access camera. Please allow camera permissions.");
     }
   };
 
   const stopCamera = () => {
     const video = videoRef.current;
     if (video?.srcObject) {
-      video.srcObject.getTracks().forEach((track) => track.stop());
+      video.srcObject.getTracks().forEach(track => track.stop());
       video.srcObject = null;
     }
     if (intervalRef.current) clearInterval(intervalRef.current);
   };
 
   const loadFaceAPI = async () => {
-    await tf.setBackend("webgl").catch(() => tf.setBackend("cpu"));
-    await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
-    await faceapi.nets.faceExpressionNet.loadFromUri("/models");
-    startFaceDetection();
+    try {
+      await tf.setBackend("webgl").catch(() => tf.setBackend("cpu"));
+      await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
+      await faceapi.nets.faceExpressionNet.loadFromUri("/models");
+      startFaceDetection();
+    } catch (err) {
+      console.error("FaceAPI error:", err);
+    }
   };
 
   const startFaceDetection = () => {
     const video = videoRef.current;
     intervalRef.current = setInterval(async () => {
-      if (!video) return;
-      const detection = await faceapi
-        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
-        .withFaceExpressions();
+      if (!video || video.paused) return;
 
-      if (detection?.expressions) {
-        const expressionsCopy = Object.fromEntries(
-          Object.entries(detection.expressions).map(([k, v]) => [k, Math.round(v * 100)])
-        );
-        const mood = Object.keys(expressionsCopy).reduce(
-          (a, b) => (expressionsCopy[a] > expressionsCopy[b] ? a : b)
-        );
-        setDetectedMood(mood);
-        setExpressions(expressionsCopy);
+      try {
+        const detection = await faceapi
+          .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+          .withFaceExpressions();
+
+        if (detection?.expressions) {
+          const expressionsCopy = Object.fromEntries(
+            Object.entries(detection.expressions).map(([k, v]) => [k, Math.round(v * 100)])
+          );
+          const mood = Object.keys(expressionsCopy).reduce(
+            (a, b) => (expressionsCopy[a] > expressionsCopy[b] ? a : b)
+          );
+
+          setDetectedMood(mood);
+          setExpressions(expressionsCopy);
+        }
+      } catch (err) {
+        console.error("Face detection error:", err);
       }
-    }, 10000);
+    }, 5000); // Detect every 5s
+  };
+
+  // ====================== MOOD HANDLERS ======================
+  const handleMoodChange = (e) => {
+    const value = e.target.value;
+    setSelectedMoods(prev =>
+      prev.includes(value) ? prev.filter(m => m !== value) : [...prev, value]
+    );
   };
 
   const generateAISummary = () => {
@@ -105,8 +118,8 @@ export default function MoodPage() {
     const user = auth.currentUser;
     if (!user) return alert("Login first");
 
-    const finalMood = selectedMoods.length > 0 ? selectedMoods : detectedMood;
-    if (!finalMood) return alert("No mood detected or selected!");
+    const finalMood = selectedMoods.length > 0 ? selectedMoods : [detectedMood];
+    if (!finalMood || finalMood.includes(null)) return alert("No mood detected or selected!");
 
     try {
       await addDoc(collection(db, "mood"), {
@@ -117,24 +130,24 @@ export default function MoodPage() {
         timestamp: Timestamp.now(),
         source: selectedMoods.length > 0 ? "manual" : "face",
         aiSummary,
-        confidence: expressions,
+        confidence: expressions || {},
       });
 
       alert("Mood saved successfully!");
       navigate("/musicselector", { state: { detectedMood } });
     } catch (err) {
-      console.error(err);
+      console.error("Error saving mood:", err);
       alert("Failed to save mood");
     }
   };
 
+  // ====================== RENDER ======================
   return (
     <div
       className="mood-wrapper"
       style={{
-        background: detectedMood
-          ? moodGradients[detectedMood]
-          : "linear-gradient(135deg, #1f1f1f, #3b3b3b)",
+        background: detectedMood ? moodGradients[detectedMood] : "linear-gradient(135deg, #1f1f1f, #3b3b3b)",
+        transition: "background 1s ease",
       }}
     >
       <div className="left-section">
@@ -153,14 +166,11 @@ export default function MoodPage() {
 
           {expressions && (
             <div className="confidence-meter">
-              {Object.keys(expressions).map((exp) => (
+              {Object.keys(expressions).map(exp => (
                 <div key={exp} className="confidence-row">
                   <span className="exp-label">{exp}</span>
                   <div className="bar-container">
-                    <div
-                      className="bar"
-                      style={{ width: `${expressions[exp]}%` }}
-                    ></div>
+                    <div className="bar" style={{ width: `${expressions[exp]}%` }}></div>
                   </div>
                   <span className="exp-value">{expressions[exp]}%</span>
                 </div>
@@ -171,7 +181,7 @@ export default function MoodPage() {
 
         <h3>Optional Manual Mood Selection</h3>
         <div className="mood-options">
-          {moodsList.map((m) => (
+          {moodsList.map(m => (
             <label key={m} className="mood-chip">
               <input
                 type="checkbox"
@@ -188,7 +198,7 @@ export default function MoodPage() {
           placeholder="Add a note about your mood..."
           className="note-box"
           value={note}
-          onChange={(e) => setNote(e.target.value)}
+          onChange={e => setNote(e.target.value)}
         />
 
         <button className="ai-summary-btn" onClick={generateAISummary}>
