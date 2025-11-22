@@ -1,3 +1,4 @@
+/* Base Layout */
 body {
   background: linear-gradient(135deg,#12131a,#1a1b23);
   color:#fff;
@@ -5,13 +6,18 @@ body {
   margin:0; padding:0;
 }
 
+/* Header */
 .dashboard-header {
   display:flex;
   justify-content:space-between;
   align-items:center;
   padding:20px;
-  border-bottom:1px solid rgba(255,255,255,0.1);
+  border-bottom:1px solid rgba(255,255,255,0.15); /* slightly stronger */
+  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,0.4);  /* prevents light fade on Netlify */
+  background-clip: padding-box;
 }
+
 .dashboard-header h1 {
   font-size:2rem;
   font-weight:700;
@@ -19,6 +25,7 @@ body {
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
 }
+
 .dashboard-header button {
   padding:8px 15px;
   border:none;
@@ -28,22 +35,26 @@ body {
   cursor:pointer;
   transition:0.3s;
 }
+
 .dashboard-header button:hover {
   background:#f0c674;
   color:#000;
 }
 
+/* Mood Detection Section */
 .detect-mood {
   display:flex;
   flex-direction:column;
   align-items:center;
   margin:20px 0;
 }
+
 .detect-mood h3 {
   margin-bottom:10px;
   font-size:1.5rem;
   color:#f0c674;
 }
+
 .detect-btn {
   background: linear-gradient(135deg,#b28fff,#f0c674);
   color:#000;
@@ -57,17 +68,20 @@ body {
   display:flex;
   align-items:center;
   gap:10px;
-  box-shadow:0 6px 12px rgba(0,0,0,0.2);
+  box-shadow:0 6px 12px rgba(0,0,0,0.25);
 }
+
 .detect-btn:hover {
   background: linear-gradient(135deg,#f0c674,#b28fff);
   transform: translateY(-2px);
-  box-shadow:0 10px 18px rgba(0,0,0,0.3);
+  box-shadow:0 10px 18px rgba(0,0,0,0.35);
 }
+
 .btn-icon {
   font-size:1.2rem;
 }
 
+/* Filters / Controls */
 .header-controls {
   display:flex;
   gap:15px;
@@ -76,20 +90,31 @@ body {
   justify-content:flex-end;
   padding:10px 20px;
 }
+
 .filters {
   display:flex;
   gap:12px;
 }
-.filters select, .filters input {
+
+/* Inputs stronger so not washed out */
+.filters select, 
+.filters input {
   padding:8px 12px;
   border-radius:8px;
   border:none;
   outline:none;
   font-size:0.95rem;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.15); /* was 0.1 */
   color:#fff;
+  background-clip: padding-box;
 }
-.filters select option, .filters input { color:#000; background:#fff; }
+
+/* Options must stay readable */
+.filters select option, 
+.filters input {
+  color:#000;
+  background:#fff;
+}
 
 .export-buttons button {
   padding:8px 15px;
@@ -100,14 +125,20 @@ body {
   cursor:pointer;
   margin-left:10px;
 }
-.export-buttons button:hover { background:#f0c674; color:#000; }
 
+.export-buttons button:hover {
+  background:#f0c674; 
+  color:#000; 
+}
+
+/* Mood Cards */
 .cards-grid {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
   gap:15px;
   padding:20px;
 }
+
 .card {
   padding:18px 15px;
   border-radius:15px;
@@ -118,24 +149,52 @@ body {
   cursor:pointer;
   font-size:1rem;
 }
-.card:hover { transform:scale(1.03); box-shadow:0 0 15px rgba(255,255,255,0.2); }
 
+.card:hover { 
+  transform:scale(1.03); 
+  box-shadow:0 0 15px rgba(255,255,255,0.2); 
+}
+
+/* Layout Panels */
 .container {
   display:flex;
   gap:25px;
   padding:20px;
   flex-wrap:wrap;
 }
-.left-panel, .right-panel { flex:1; display:flex; flex-direction:column; gap:20px; }
-@media(max-width:1024px){ .container { flex-direction:column; } }
 
-.chart-container { padding:15px; border-radius:15px; background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); backdrop-filter: blur(6px); width:100%; }
+.left-panel, 
+.right-panel { 
+  flex:1; 
+  display:flex; 
+  flex-direction:column; 
+  gap:20px; 
+}
 
+@media(max-width:1024px){
+  .container { 
+    flex-direction:column; 
+  } 
+}
+
+/* Chart Box */
+.chart-container { 
+  padding:15px; 
+  border-radius:15px; 
+  background: rgba(255,255,255,0.08); /* slightly stronger */
+  border:1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px); 
+  width:100%;
+  background-clip: padding-box;
+}
+
+/* Heatmap */
 .heatmap-container .heatmap {
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:5px;
 }
+
 .heatmap-container .heatmap div {
   width:28px;
   height:28px;
@@ -144,22 +203,44 @@ body {
   transition:all 0.3s ease;
   position:relative;
 }
+
+/* Mood Colors */
 .heatmap-container .heatmap div[data-mood="happy"]{ background:#a18e5d; }
 .heatmap-container .heatmap div[data-mood="sad"]{ background:#5d7aa2; }
 .heatmap-container .heatmap div[data-mood="angry"]{ background:#a25d5d; }
 .heatmap-container .heatmap div[data-mood="surprised"]{ background:#8b5da2; }
 .heatmap-container .heatmap div[data-mood="neutral"]{ background:#7a7a7a; }
+
+/* Hover Notes */
 .heatmap-container .heatmap div:hover::after {
   content: attr(data-note);
   position:absolute;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.75); /* stronger */
   padding:4px 6px;
   border-radius:6px;
   font-size:0.7rem;
-  top:-28px; left:-8px;
-  max-width:140px; pointer-events:none;
+  top:-28px; 
+  left:-8px;
+  max-width:140px; 
+  pointer-events:none;
 }
 
-.recent-notes { background: rgba(255,255,255,0.08); padding:10px; border-radius:10px; font-size:0.9rem; max-height:180px; overflow-y:auto; }
-.recent-notes ul { list-style-type: disc; padding-left:20px; }
-.recent-notes li { margin-bottom:6px; }
+/* Recent Notes Box */
+.recent-notes { 
+  background: rgba(255,255,255,0.12); /* stronger glass */
+  padding:10px; 
+  border-radius:10px; 
+  font-size:0.9rem; 
+  max-height:180px; 
+  overflow-y:auto; 
+  background-clip: padding-box;
+}
+
+.recent-notes ul { 
+  list-style-type: disc; 
+  padding-left:20px; 
+}
+
+.recent-notes li { 
+  margin-bottom:6px; 
+}
