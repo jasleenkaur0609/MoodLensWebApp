@@ -1,6 +1,17 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: none !important;
+  background-color: #f7f7f7;
+}
+
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+/* Override global background so pages can set their own */
+html, body, #root {
+  background: transparent !important;
   background-color: transparent !important;
 }
+

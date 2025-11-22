@@ -52,7 +52,7 @@ body {
 
 /* Fix transparency washout + keep glass effect */
 .login-card {
-  background: rgba(255, 255, 255, 0.12);  /* Stronger opacity */
+  background: rgba(255, 255, 255, 0.12) !important;  /* Stronger opacity */
   backdrop-filter: blur(12px);
   padding: 40px;
   border-radius: 20px;
