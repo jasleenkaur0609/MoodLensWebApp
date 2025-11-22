@@ -1,9 +1,8 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background-color: #f7f7f7;
+ 
 }
-
 
 h1, h2, h3 {
   color: #333;
@@ -26,9 +25,3 @@ button {
 button:hover {
   background-color: #45a049;
 }
-/* Override global background so pages can set their own */
-html, body, #root {
-  background: transparent !important;
-  background-color: transparent !important;
-}
-
