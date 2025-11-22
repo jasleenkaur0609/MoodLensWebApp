@@ -32,16 +32,6 @@ body {
   line-height: 1.5;
 }
 
-/* Full-page strong background so transparency doesn't wash out */
-.login-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #7b2ff7, #f107a3);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Keep your original layout */
 .login-right {
   flex: 1;
   display: flex;
@@ -50,18 +40,14 @@ body {
   padding: 60px;
 }
 
-/* Fix transparency washout + keep glass effect */
 .login-card {
-  background: rgba(255, 255, 255, 0.12) !important;  /* Stronger opacity */
+  background: rgba(255,255,255,0.05) !important;
   backdrop-filter: blur(12px);
   padding: 40px;
   border-radius: 20px;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 0 20px rgba(178, 76, 255, 0.4);
-
-  /* Prevents extra transparency on Netlify */
-  background-clip: padding-box;
+  box-shadow: 0 0 20px rgba(178,76,255,0.4);
 }
 
 .login-card h2 {
@@ -75,12 +61,11 @@ body {
   gap: 15px;
 }
 
-/* Darker, consistent glass effect for Netlify */
 .login-card input {
   padding: 12px;
   border-radius: 10px;
   border: none;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255,255,255,0.12);
   color: #fff;
 }
 
@@ -109,8 +94,8 @@ body {
   padding: 12px;
   width: 100%;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.3);
   cursor: pointer;
   color: #fff;
 }
