@@ -4,13 +4,14 @@ import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { db, auth } from "../utils/firebaseConfig";
 import "./Music.css";
 
+// Dark shades for moods
 const moodColors = {
-  happy: "#ffd7a8",
-  sad: "#c7d7ff",
-  neutral: "#d7b2b2ff",
-  angry: "#ffb3b3",
-  calm: "#c9ffd8",
-  energetic: "#ffe28a",
+  happy: "#58492D",
+  sad: "#2E364F",
+  neutral: "#4A3F3F",
+  angry: "#4A2E2E",
+  calm: "#2F4A38",
+  energetic: "#4A3A20",
 };
 
 const moodIcons = {
@@ -24,27 +25,27 @@ const moodIcons = {
 
 export default function MusicSelector() {
   const { state } = useLocation();
-  const { detectedMood, confidence } = state || {};
+  const { detectedMood } = state || {};
 
   const [language, setLanguage] = useState(null);
   const [songs, setSongs] = useState([]);
   const [selectedSong, setSelectedSong] = useState(null);
   const [suggestionPara, setSuggestionPara] = useState("");
   const [suggestionPoints, setSuggestionPoints] = useState([]);
-  const [bgColor, setBgColor] = useState("#f0f0f0");
+  const [bgColor, setBgColor] = useState("#1c1c1c");
 
-  // Update pastel background smoothly
+  // Initial mood background
   useEffect(() => {
-    if (detectedMood) setBgColor(moodColors[detectedMood] || "#f0f0f0");
+    if (detectedMood) setBgColor(moodColors[detectedMood] || "#1c1c1c");
     if (language) fetchSongs(detectedMood, language);
     fetchSuggestion(detectedMood);
   }, [detectedMood, language]);
 
-  // Animate background when song changes
+  // Background animation when song changes
   useEffect(() => {
     if (selectedSong) {
-      const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
-      setBgColor(randomColor);
+      const darkRandom = `#${Math.floor(Math.random() * 0x555555 + 0x111111).toString(16)}`;
+      setBgColor(darkRandom);
     }
   }, [selectedSong]);
 
@@ -78,21 +79,24 @@ export default function MusicSelector() {
     }
   };
 
+  // UPDATED: Save in "selectedSongs" and removed confidence
   const handleSongSelect = async (song) => {
     setSelectedSong(song);
     const user = auth.currentUser;
     if (!user) return alert("Login first");
 
     try {
-      await addDoc(collection(db, "mood"), {
+      await addDoc(collection(db, "selectedSongs"), {
         userId: user.uid,
-        detectedMood,
-        selectedLanguage: language,
-        selectedSong: song.youtubeUrl,
+        songTitle: song.title,
+        artist: song.artist || "",
+        mood: detectedMood,
+        language: language,
+        youtubeUrl: song.youtubeUrl,
         timestamp: new Date(),
-        source: "auto",
-        confidence: confidence ?? null,
       });
+
+      console.log("Song saved in selectedSongs collection");
     } catch (err) {
       console.error("Error saving selected song:", err);
     }
@@ -100,7 +104,9 @@ export default function MusicSelector() {
 
   const getEmbedUrl = (url) => {
     if (!url) return null;
-    const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+    const match = url.match(
+      /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/
+    );
     if (!match) return null;
     return `https://www.youtube.com/embed/${match[1]}?autoplay=1&controls=0&mute=0`;
   };
@@ -122,7 +128,9 @@ export default function MusicSelector() {
           <div className="suggestion-card">
             <p className="suggestion-para">{suggestionPara}</p>
             <ul className="suggestion-points">
-              {suggestionPoints.map((p, i) => <li key={i}>{p}</li>)}
+              {suggestionPoints.map((p, i) => (
+                <li key={i}>{p}</li>
+              ))}
             </ul>
           </div>
         </div>
@@ -132,8 +140,12 @@ export default function MusicSelector() {
           <div className="language-card mixed-card">
             <h3>Select Language</h3>
             <div className="lang-buttons">
-              {["Hindi", "English", "Punjabi"].map(l => (
-                <button key={l} className={language === l ? "active" : ""} onClick={() => setLanguage(l)}>
+              {["Hindi", "English", "Punjabi"].map((l) => (
+                <button
+                  key={l}
+                  className={language === l ? "active" : ""}
+                  onClick={() => setLanguage(l)}
+                >
                   {l}
                 </button>
               ))}
@@ -143,8 +155,12 @@ export default function MusicSelector() {
           {songs.length > 0 && (
             <div className="song-card mixed-card">
               <h3>Songs for you</h3>
-              {songs.map(song => (
-                <div key={song.id} className="song-item" onClick={() => handleSongSelect(song)}>
+              {songs.map((song) => (
+                <div
+                  key={song.id}
+                  className="song-item"
+                  onClick={() => handleSongSelect(song)}
+                >
                   <h4>{song.title}</h4>
                   {song.artist && <p>{song.artist}</p>}
                 </div>
@@ -154,9 +170,19 @@ export default function MusicSelector() {
 
           {selectedSong && (
             <div className="player-card mixed-card">
-              <iframe src={getEmbedUrl(selectedSong.youtubeUrl)} title="YouTube audio" allow="autoplay" className="small-player"></iframe>
+              <iframe
+                src={getEmbedUrl(selectedSong.youtubeUrl)}
+                title="YouTube audio"
+                allow="autoplay"
+                className="small-player"
+              ></iframe>
+
               <div className="equalizer">
-                <span></span><span></span><span></span><span></span><span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
               </div>
             </div>
           )}
