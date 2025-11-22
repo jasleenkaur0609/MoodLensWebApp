@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { Bar, Pie, Line } from "react-chartjs-2";
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,6 +16,7 @@ import {
   Tooltip,
   Legend
 } from "chart.js";
+
 import { jsPDF } from "jspdf";
 import { saveAs } from "file-saver";
 import "./DashboardPage.css";
@@ -38,11 +40,13 @@ const DashboardPage = () => {
   const [moods, setMoods] = useState([]);
   const [filterMood, setFilterMood] = useState("all");
   const [filterDate, setFilterDate] = useState("");
+
+  // ⭐ NEW — CONFIDENCE OBJECT
+  const [confidence, setConfidence] = useState(null);
+
   const navigate = useNavigate();
 
-  // ===========================
-  // AUTH + FETCH USER DATA
-  // ===========================
+  // AUTH
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (!currentUser) navigate("/login");
@@ -54,9 +58,7 @@ const DashboardPage = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  // ===========================
-  // FETCH MOOD DATA FROM CORRECT COLLECTION
-  // ===========================
+  // FETCH MOOD DATA
   const fetchMoodData = async (uid) => {
     if (!uid) return;
 
@@ -69,15 +71,19 @@ const DashboardPage = () => {
         .filter((m) => m.userId === uid);
 
       setMoods(data);
+
+      // ⭐ EXTRACT FULL CONFIDENCE OBJECT FROM LAST ENTRY
+      if (data.length > 0 && data[data.length - 1].confidence) {
+        setConfidence(data[data.length - 1].confidence);
+      }
+
     } catch (err) {
       console.error("Error fetching moods:", err);
       alert("Error fetching moods. Check Firebase rules.");
     }
   };
 
-  // ===========================
-  // FILTERING
-  // ===========================
+  // FILTER LOGIC
   const filteredMoods = moods.filter((m) => {
     const date =
       m.timestamp?.seconds
@@ -92,9 +98,7 @@ const DashboardPage = () => {
     );
   });
 
-  // ===========================
-  // STATISTICS CARDS
-  // ===========================
+  // STATISTICS
   const totalMoods = filteredMoods.length;
   const happyDays = filteredMoods.filter((m) => m.detectedMood === "happy").length;
   const sadDays = filteredMoods.filter((m) => m.detectedMood === "sad").length;
@@ -117,7 +121,6 @@ const DashboardPage = () => {
     return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
   })();
 
-  // HAPPY STREAK
   let streak = 0,
     maxStreak = 0;
   filteredMoods.forEach((m) => {
@@ -129,9 +132,7 @@ const DashboardPage = () => {
     }
   });
 
-  // ===========================
   // CHART DATA
-  // ===========================
   const pieData = {
     labels: moodsList,
     datasets: [
@@ -172,9 +173,7 @@ const DashboardPage = () => {
     ]
   };
 
-  // ===========================
-  // EXPORT FUNCTIONS
-  // ===========================
+  // EXPORT CSV
   const exportCSV = () => {
     if (!filteredMoods.length) return;
 
@@ -191,6 +190,7 @@ const DashboardPage = () => {
     saveAs(new Blob([csv], { type: "text/csv" }), "mood_history.csv");
   };
 
+  // EXPORT PDF
   const exportPDF = () => {
     if (!filteredMoods.length) return;
 
@@ -218,9 +218,6 @@ const DashboardPage = () => {
     doc.save("mood_history.pdf");
   };
 
-  // ===========================
-  // RENDER UI
-  // ===========================
   return (
     <div className="dashboard-page">
       <header className="dashboard-header">
@@ -237,7 +234,6 @@ const DashboardPage = () => {
         </button>
       </div>
 
-      {/* Filters */}
       <div className="header-controls">
         <div className="filters">
           <select value={filterMood} onChange={(e) => setFilterMood(e.target.value)}>
@@ -262,7 +258,7 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* Cards */}
+      {/* STAT CARDS */}
       <div className="cards-grid">
         <div className="card">Total Moods: {totalMoods}</div>
         <div className="card">Happy Days: {happyDays}</div>
@@ -272,9 +268,71 @@ const DashboardPage = () => {
         <div className="card">Happy Streak: {maxStreak}</div>
       </div>
 
+      {/* ⭐ CONFIDENCE ANALYTICS SECTION */}
+      <div className="confidence-analytics">
+        <h2>AI Confidence Analysis</h2>
+
+        {confidence ? (
+          <div className="confidence-charts">
+
+            {/* BAR CHART */}
+            <div className="chart-container">
+              <h3>Confidence Bar Chart</h3>
+              <Bar
+                data={{
+                  labels: Object.keys(confidence),
+                  datasets: [
+                    {
+                      label: "Confidence (%)",
+                      data: Object.values(confidence),
+                      backgroundColor: [
+                        "#FFB3BA",
+                        "#BAE1FF",
+                        "#FFFFBA",
+                        "#BFFCC6",
+                        "#FFDFBA",
+                        "#C7CEEA",
+                        "#B5EAD7"
+                      ]
+                    }
+                  ]
+                }}
+              />
+            </div>
+
+            {/* PIE CHART */}
+            <div className="chart-container">
+              <h3>Confidence Pie Chart</h3>
+              <Pie
+                data={{
+                  labels: Object.keys(confidence),
+                  datasets: [
+                    {
+                      label: "AI Confidence",
+                      data: Object.values(confidence),
+                      backgroundColor: [
+                        "#FFB3BA",
+                        "#BAE1FF",
+                        "#FFFFBA",
+                        "#BFFCC6",
+                        "#FFDFBA",
+                        "#C7CEEA",
+                        "#B5EAD7"
+                      ]
+                    }
+                  ]
+                }}
+              />
+            </div>
+
+          </div>
+        ) : (
+          <p>No confidence data available</p>
+        )}
+      </div>
+
       {/* PANELS */}
       <div className="container">
-        {/* LEFT PANEL */}
         <div className="left-panel">
           <div className="chart-container">
             <Pie data={pieData} />
@@ -284,7 +342,6 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
         <div className="right-panel">
           <div className="recent-notes">
             <h3>Recent Notes</h3>
@@ -301,7 +358,6 @@ const DashboardPage = () => {
             </ul>
           </div>
 
-          {/* Heatmap */}
           <div className="chart-container heatmap-container">
             <h3>Mood Heatmap</h3>
             <div className="heatmap">
@@ -311,7 +367,6 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Line Chart */}
           <div className="chart-container">
             <Line data={lineData} />
           </div>
