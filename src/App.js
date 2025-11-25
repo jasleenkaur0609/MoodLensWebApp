@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Musicselector from './pages/Musicselector';
 import MoodDetectionChoice from './pages/MoodDetectionChoice';
+import PhotoMoodPage from './pages/PhotoMoodPage';
 
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/musicselector" element={<Musicselector />} />
+        <Route path="/photo-upload" element={<PhotoMoodPage />} />
         <Route path="/mood-choice" element={<MoodDetectionChoice />} />
 
       </Routes>
