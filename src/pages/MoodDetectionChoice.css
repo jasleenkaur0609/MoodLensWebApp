@@ -1,0 +1,173 @@
+/* ===========================
+   BACKGROUND
+=========================== */
+
+.mood-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  background: radial-gradient(circle at top, #1a1f4b, #0a0c22);
+  overflow: hidden;
+  position: relative;
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ===========================
+    SHOOTING STARS
+=========================== */
+
+.shooting-star {
+  position: absolute;
+  width: 2px;
+  height: 80px;
+  background: linear-gradient(to bottom, white, transparent);
+  opacity: 0.7;
+  animation: shoot 4s linear infinite;
+}
+
+.star1 { left: 10%; top: 25%; animation-delay: 0s; }
+.star2 { left: 50%; top: 10%; animation-delay: 1.8s; }
+.star3 { left: 80%; top: 40%; animation-delay: 3s; }
+
+@keyframes shoot {
+  0% { transform: translateY(-100px) translateX(-100px) rotate(45deg); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(400px) translateX(400px) rotate(45deg); opacity: 0; }
+}
+
+/* ===========================
+   SPARKLES
+=========================== */
+
+.sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px white;
+  animation: sparkle 3s infinite ease-in-out;
+}
+
+.s1 { top: 20%; left: 30%; }
+.s2 { top: 50%; left: 70%; animation-delay: 0.7s; }
+.s3 { top: 80%; left: 20%; animation-delay: 1.3s; }
+.s4 { top: 35%; left: 85%; animation-delay: 2s; }
+
+@keyframes sparkle {
+  0% { opacity: 0.2; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.3); }
+  100% { opacity: 0.2; transform: scale(0.7); }
+}
+
+/* ===========================
+   FLOATING EMOJIS
+=========================== */
+
+.emoji {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0.8;
+  animation: floatEmoji 10s infinite linear;
+}
+
+.e1 { top: 80%; left: 10%; }
+.e2 { top: 60%; left: 50%; animation-delay: 2s; }
+.e3 { top: 30%; left: 80%; animation-delay: 3s; }
+.e4 { top: 10%; left: 40%; animation-delay: 5s; }
+.e5 { top: 20%; left: 15%; animation-delay: 4s; }
+
+@keyframes floatEmoji {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-40px) rotate(10deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+/* ===========================
+   QUOTES
+=========================== */
+
+.quote-box {
+  position: absolute;
+  top: 13%;
+  width: 100%;
+  text-align: center;
+  z-index: 20;
+}
+
+.quote-text {
+  color: #ffffffd9;
+  font-size: 1.7rem;
+  font-weight: 500;
+  opacity: 0;
+  animation: quoteFade 9s infinite ease-in-out;
+  text-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+}
+
+@keyframes quoteFade {
+  0% { opacity: 0; transform: translateY(20px); }
+  10% { opacity: 1; transform: translateY(0); }
+  50% { opacity: 1; }
+  60% { opacity: 0; transform: translateY(-20px); }
+  100% { opacity: 0; }
+}
+
+/* ===========================
+   MAIN CARD
+=========================== */
+
+.mood-card {
+  width: 480px;
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 25px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.15);
+  text-align: center;
+  transition: 0.3s;
+}
+
+.main-title {
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.sub-text {
+  color: #ffffffc7;
+  margin-bottom: 25px;
+}
+
+/* ===========================
+   OPTIONS
+=========================== */
+
+.options-row {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+}
+
+.option {
+  width: 150px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 18px;
+  cursor: pointer;
+  color: #fff;
+  transition: 0.3s;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.12);
+  transform-style: preserve-3d;
+}
+
+.option:hover {
+  transform: scale(1.07) translateY(-5px);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
+}
+
+.icon-circle {
+  font-size: 2.3rem;
+  margin-bottom: 10px;
+}

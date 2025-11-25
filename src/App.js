@@ -7,6 +7,7 @@ import AdminPage from './pages/AdminPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Musicselector from './pages/Musicselector';
+import MoodDetectionChoice from './pages/MoodDetectionChoice';
 
 
 function App() {
@@ -20,6 +21,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/musicselector" element={<Musicselector />} />
+        <Route path="/mood-choice" element={<MoodDetectionChoice />} />
+
       </Routes>
     </Router>
   );

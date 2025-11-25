@@ -1,218 +1,295 @@
-/* === Overall Page === */
+/* ========================== */
+/*      MOOD PAGE WRAPPER      */
+/* ========================== */
 .mood-wrapper {
+  min-height: 100vh;
   display: flex;
-  flex-direction: row;
-  width: 100vw;
-  height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  overflow: hidden;
+  padding: 20px;
+  font-family: "Poppins", sans-serif;
+  color: #222;
+  gap: 20px;
   transition: background 0.5s ease;
 }
 
-/* === Left Section (Camera + Breathing Circle) === */
+/* Mood-based backgrounds */
+.mood-happy { background: #fceabb; }
+.mood-sad { background: #a1c4fd; }
+.mood-angry { background: #ff7e5f; }
+.mood-relaxed { background: #c2e9fb; }
+
+/* ========================== */
+/*        LEFT SECTION         */
+/* ========================== */
 .left-section {
-  flex: 1;
+  flex: 1.2;
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  position: relative;
-  background: rgba(0,0,0,0.1);
+  align-items: center;
 }
 
-.camera-frame video {
-  border-radius: 15px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.6);
-  width: 480px;
-  height: 360px;
-  object-fit: cover;
-}
-
-/* Breathing Circle Animation */
-.breathing-circle {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  margin-top: 30px;
-  animation: breathe 2.5s infinite alternate;
-}
-
-@keyframes breathe {
-  0% { transform: scale(0.8); opacity: 0.5; }
-  50% { transform: scale(1.1); opacity: 0.8; }
-  100% { transform: scale(0.9); opacity: 0.6; }
-}
-
-/* === Right Section (Mood Logging Panel) === */
-.right-section {
-  flex: 1;
-  background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(15px);
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  color: #fff;
-}
-
-.right-section h1 {
-  margin-bottom: 20px;
-  font-size: 2rem;
-}
-
-.live-mood-tags {
-  margin-bottom: 20px;
-}
-
-.mood-tag {
-  display: inline-block;
-  background: rgba(255,255,255,0.2);
-  padding: 6px 12px;
+.camera-frame {
+  width: 100%;
+  max-width: 700px;
+  height: 500px;
   border-radius: 20px;
-  font-weight: bold;
-  margin-left: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.4);
 }
 
-/* Confidence Meter */
-.confidence-meter {
-  margin-top: 10px;
+video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+}
+
+/* ========================== */
+/*       RIGHT SECTION         */
+/* ========================== */
+.right-section {
+  flex: 0.8;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 25px;
+  padding: 20px;
+  backdrop-filter: blur(15px);
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+}
+
+.scrollable-panel {
+  overflow-y: auto;
+  padding-right: 10px;
+  flex: 1;
+}
+
+/* ========================== */
+/*           HEADINGS          */
+/* ========================== */
+h1, h2, h3 {
+  margin: 10px 0;
+}
+
+/* ========================== */
+/*       CONFIDENCE METER      */
+/* ========================== */
+.confidence-meter {
+  margin: 15px 0;
 }
 
 .confidence-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  margin-bottom: 5px;
 }
 
-.exp-label {
-  width: 80px;
+.confidence-row span {
+  width: 70px;
   text-transform: capitalize;
-  font-size: 0.9rem;
-}
-
-.bar-container {
-  flex: 1;
-  background: rgba(255,255,255,0.2);
-  border-radius: 5px;
-  overflow: hidden;
-  height: 12px;
+  font-weight: 500;
 }
 
 .bar {
+  flex: 1;
+  height: 15px;
+  background: #ddd;
+  border-radius: 10px;
+  margin: 0 10px;
+  overflow: hidden;
+}
+
+.fill {
   height: 100%;
-  background: #00ffea;
-  transition: width 0.5s ease;
+  background: linear-gradient(90deg, #2193b0, #6dd5ed);
+  border-radius: 10px;
+  transition: width 0.5s ease-in-out;
+  animation: pulse 2s infinite;
 }
 
-.exp-value {
-  width: 40px;
-  text-align: right;
-  font-size: 0.85rem;
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
-/* Mood Checkboxes */
+/* ========================== */
+/*       MOOD SELECTION        */
+/* ========================== */
 .mood-options {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin: 10px 0;
 }
 
 .mood-chip {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: rgba(255,255,255,0.2);
-  padding: 6px 12px;
-  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transition: all 0.3s;
+  user-select: none;
 }
 
 .mood-chip input {
-  cursor: pointer;
+  display: none; /* hide checkbox */
 }
 
 .mood-chip:hover {
-  background: rgba(255,255,255,0.35);
+  background: rgba(255, 255, 255, 0.35);
 }
 
-/* Note Box */
-.note-box {
-  width: 100%;
-  height: 80px;
-  padding: 10px;
-  border-radius: 12px;
-  border: none;
-  resize: none;
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-  margin-bottom: 15px;
-}
-
-/* Buttons */
-.ai-summary-btn, .save-btn {
-  padding: 10px 20px;
+.mood-chip span {
+  display: inline-block;
+  padding: 5px 12px;
   border-radius: 25px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  transition: all 0.3s ease;
+  transition: all 0.3s;
+}
+
+.mood-chip input:checked + span {
+  background: #2193b0;
+  color: #fff;
+  transform: scale(1.2);
+  box-shadow: 0 4px 15px rgba(33, 147, 176, 0.7);
+  border: 2px solid #fff;
+}
+
+/* ========================== */
+/*        EMOJI PICKER         */
+/* ========================== */
+.emoji-picker {
+  display: flex;
+  gap: 10px;
   margin-bottom: 15px;
 }
 
-.ai-summary-btn {
-  background: rgba(0,255,234,0.6);
-  color: #000;
+.emoji-btn {
+  font-size: 1.8rem;
+  background: transparent;
+  border: 2px solid transparent;
+  padding: 5px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.ai-summary-btn:hover {
-  background: rgba(0,255,234,0.9);
+.emoji-btn.selected {
+  border-color: #fff;
+  transform: scale(1.2);
 }
 
+/* ========================== */
+/*       SAVE BUTTON           */
+/* ========================== */
 .save-btn {
-  background: rgba(255,165,0,0.6);
-  color: #000;
+  margin: 8px 0;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  background: #1e3c72;
+  color: #fff;
+  transition: all 0.3s;
 }
 
 .save-btn:hover {
-  background: rgba(255,165,0,0.9);
+  opacity: 0.85;
+  transform: translateY(-2px);
 }
 
-/* AI Summary Text */
-.ai-summary {
-  background: rgba(255,255,255,0.2);
-  padding: 10px;
-  border-radius: 12px;
+/* ========================== */
+/*           NOTE BOX          */
+/* ========================== */
+.note-box {
+  width: 100%;
+  min-height: 200px;
+  margin: 10px 0;
+  padding: 15px;
+  font-size: 1rem;
+  border-radius: 15px;
+  border: 1px solid #ccc;
+  resize: vertical;
+  outline: none;
+  transition: border 0.3s, box-shadow 0.3s, background 0.5s;
+}
+
+.note-box:focus {
+  border-color: #2193b0;
+  box-shadow: 0 0 10px rgba(33, 147, 176, 0.5);
+}
+
+/* ========================== */
+/*        PHOTO UPLOAD         */
+/* ========================== */
+input[type="file"] {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  padding: 14px 20px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+  border: 2px dashed rgba(200, 200, 200, 0.7);
+  cursor: pointer;
+  color: #555;
+  font-weight: 600;
+  text-align: center;
   margin-bottom: 15px;
+  transition: all 0.3s ease, transform 0.2s;
+  font-size: 1rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Scrollbar Styling */
-.right-section::-webkit-scrollbar {
-  width: 8px;
-}
-
-.right-section::-webkit-scrollbar-thumb {
+input[type="file"]::file-selector-button {
+  cursor: pointer;
   background: rgba(255,255,255,0.3);
-  border-radius: 4px;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-weight: 600;
+  color: #555;
+  transition: all 0.3s ease;
 }
 
-.right-section::-webkit-scrollbar-track {
-  background: transparent;
+input[type="file"]:hover {
+  background: linear-gradient(135deg, #e0eafc, #f5f7fa);
+  transform: scale(1.03);
+  border-color: rgba(150,150,150,0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-/* Responsive */
-@media (max-width: 1000px) {
-  .mood-wrapper {
-    flex-direction: column;
-  }
+input[type="file"]:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
 
-  .camera-frame video {
-    width: 90%;
-    height: auto;
-  }
+.uploaded-photo {
+  margin-top: 10px;
+  width: 100%;
+  max-width: 250px;
+  border-radius: 15px;
+  border: 2px solid rgba(255,255,255,0.5);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* ========================== */
+/*         SCROLLBAR           */
+/* ========================== */
+.scrollable-panel::-webkit-scrollbar { 
+  width: 8px; 
+}
+.scrollable-panel::-webkit-scrollbar-track { 
+  background: rgba(255,255,255,0.1); 
+  border-radius: 10px; 
+}
+.scrollable-panel::-webkit-scrollbar-thumb { 
+  background: rgba(33,147,176,0.6); 
+  border-radius: 10px; 
+}
+.scrollable-panel::-webkit-scrollbar-thumb:hover { 
+  background: rgba(33,147,176,0.9); 
 }

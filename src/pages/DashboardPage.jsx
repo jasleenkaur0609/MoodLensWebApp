@@ -229,7 +229,7 @@ const DashboardPage = () => {
 
       <div className="detect-mood">
         <h3>Detect Your Mood</h3>
-        <button className="detect-btn" onClick={() => navigate("/mood")}>
+        <button className="detect-btn" onClick={() => navigate("/mood-choice")}>
           🎯 Detect Mood
         </button>
       </div>
