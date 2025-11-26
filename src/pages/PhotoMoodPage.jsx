@@ -12,6 +12,7 @@ const moodChips = [
   "anxious","bored","calm","confused","curious","determined","energetic","frustrated",
   "grateful","hopeful","inspired","lonely","nervous","proud","relaxed","tired"
 ];
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const emojiOptions = [
   { mood: "happy", emoji: "😊" },
@@ -47,7 +48,7 @@ const PhotoMoodPage = () => {
 
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/mood-detect", formData, {
+      const res = await axios.post(`${API}/api/mood-detect`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
