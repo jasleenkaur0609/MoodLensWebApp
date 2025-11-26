@@ -25,78 +25,8 @@ body {
   transition: background 1.2s ease;
 }
 
-/* Floating blobs */
-.blob-layer {
-  position: absolute;
-  width: 55vw;
-  height: 55vw;
-  top: -18%;
-  left: -10%;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), transparent 70%);
-  filter: blur(90px);
-  animation: blobMove 14s infinite ease-in-out alternate;
-  z-index: 0;
-}
-
-@keyframes blobMove {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(160px, 130px); }
-}
-
-/* Aurora soft glow */
-.aurora-layer {
-  position: absolute;
-  width: 130%;
-  height: 130%;
-  top: -10%;
-  left: -10%;
-  background: linear-gradient(120deg,
-      rgba(255,255,255,0.1),
-      rgba(255,255,255,0),
-      rgba(255,255,255,0.1)
-  );
-  filter: blur(70px);
-  animation: auroraShift 12s infinite linear;
-  z-index: 0;
-}
-
-@keyframes auroraShift {
-  0% { transform: translateX(-5%); }
-  100% { transform: translateX(8%); }
-}
-
-/* Ambient floating light spots */
-.bubble-layer::before,
-.bubble-layer::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.1);
-  animation: floatUp 12s infinite ease-in-out;
-}
-
-.bubble-layer::before {
-  width: 140px;
-  height: 140px;
-  top: 20%;
-  left: 70%;
-}
-
-.bubble-layer::after {
-  width: 85px;
-  height: 85px;
-  top: 65%;
-  left: 15%;
-  animation-duration: 15s;
-}
-
-@keyframes floatUp {
-  0% { transform: translateY(40px); opacity: 0.7; }
-  100% { transform: translateY(-40px); opacity: 0.5; }
-}
-
 /* =====================================================
-   🔲 CONTAINER LAYOUT
+   🔲 CONTAINER LAYOUT (60-40)
 ===================================================== */
 .main-container {
   position: relative;
@@ -104,6 +34,22 @@ body {
   display: flex;
   gap: 40px;
   justify-content: space-between;
+}
+
+/* LEFT PANEL - 60% */
+.left-panel {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* RIGHT PANEL - 40% */
+.right-panel {
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* =====================================================
@@ -191,6 +137,10 @@ body {
 /* =====================================================
    🎵 SONG LIST
 ===================================================== */
+.song-card {
+  margin-top: 15px;
+}
+
 .song-item {
   padding: 14px 16px;
   margin-top: 12px;
@@ -220,10 +170,14 @@ body {
 /* =====================================================
    ▶️ SMALL YOUTUBE PLAYER
 ===================================================== */
+.player-card {
+  margin-top: 20px;
+}
+
 .small-player {
   width: 100%;
-  max-width: 300px;
-  height: 160px;
+  max-width: 320px;
+  height: 180px;
   border-radius: 16px;
   border: none;
   box-shadow: 0 6px 18px rgba(0,0,0,0.14);
@@ -263,5 +217,15 @@ body {
 @media (max-width: 900px) {
   .main-container {
     flex-direction: column;
+  }
+
+  .left-panel,
+  .right-panel {
+    width: 100%;
+  }
+
+  .small-player {
+    max-width: 100%;
+    height: 200px;
   }
 }

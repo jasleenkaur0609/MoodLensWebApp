@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
 import "./PhotoMoodPage.css";
 
@@ -21,22 +21,9 @@ const emojiOptions = [
   { mood: "neutral", emoji: "😐" },
 ];
 
-const moodColors = {
-  happy: "linear-gradient(135deg, #ffe0b2, #ffcc80)",
-  joyful: "linear-gradient(135deg, #fff9c4, #fff59d)",
-  excited: "linear-gradient(135deg, #ffab91, #ff8a65)",
-  content: "linear-gradient(135deg, #b2dfdb, #80cbc4)",
-  sad: "linear-gradient(135deg, #b3e5fc, #81d4fa)",
-  angry: "linear-gradient(135deg, #ff8a80, #ff5252)",
-  fearful: "linear-gradient(135deg, #b0bec5, #90a4ae)",
-  disgusted: "linear-gradient(135deg, #c5e1a5, #aed581)",
-  surprised: "linear-gradient(135deg, #f48fb1, #f06292)",
-  neutral: "linear-gradient(135deg, #e0e0e0, #bdbdbd)",
-  default: "linear-gradient(135deg, #f5f5f5, #e0e0e0)"
-};
-
 const PhotoMoodPage = () => {
   const [image, setImage] = useState(null);
+  const [capturedFromCamera, setCapturedFromCamera] = useState(false);
   const [detectedMood, setDetectedMood] = useState("");
   const [confidence, setConfidence] = useState({});
   const [selectedMoods, setSelectedMoods] = useState([]);
@@ -49,8 +36,12 @@ const PhotoMoodPage = () => {
   const canvasRef = useRef(null);
   const navigate = useNavigate();
 
+  // =============================
+  // Handle image upload or camera capture
+  // =============================
   const handleImage = async (fileOrBlob) => {
     setImage(URL.createObjectURL(fileOrBlob));
+
     const formData = new FormData();
     formData.append("file", fileOrBlob);
 
@@ -59,8 +50,22 @@ const PhotoMoodPage = () => {
       const res = await axios.post("http://localhost:5000/api/mood-detect", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+
       setDetectedMood(res.data.detectedMood);
-      setConfidence(res.data.confidence);
+
+      // Convert confidence values safely to 0-100 and clamp
+      const sampleValue = Object.values(res.data.confidence)[0];
+      const converted = {};
+      for (let key in res.data.confidence) {
+        let val = res.data.confidence[key];
+        if (sampleValue <= 1) {
+          // backend returns 0-1
+          val = val * 100;
+        }
+        converted[key] = Math.min(Math.round(val), 100);
+      }
+      setConfidence(converted);
+
     } catch (err) {
       console.error(err);
       alert("Mood detection failed. Make sure backend is running.");
@@ -70,9 +75,15 @@ const PhotoMoodPage = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) handleImage(file);
+    if (file) {
+      setCapturedFromCamera(false);
+      handleImage(file);
+    }
   };
 
+  // =============================
+  // Camera functions
+  // =============================
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -90,28 +101,44 @@ const PhotoMoodPage = () => {
     videoRef.current.srcObject = null;
   };
 
+  const capturePhoto = () => {
+    const ctx = canvasRef.current.getContext("2d");
+    ctx.drawImage(videoRef.current, 0, 0, 280, 280);
+
+    canvasRef.current.toBlob(blob => {
+      setCapturedFromCamera(true);
+      handleImage(blob);
+    }, "image/jpeg");
+  };
+
   const retakePhoto = () => {
     setImage(null);
     setDetectedMood("");
     setConfidence({});
+    setCapturedFromCamera(false);
   };
 
-  const capturePhoto = () => {
-    const ctx = canvasRef.current.getContext("2d");
-    ctx.drawImage(videoRef.current, 0, 0, 300, 300);
-    canvasRef.current.toBlob(blob => handleImage(blob), "image/jpeg");
-  };
-
+  // =============================
+  // Emoji & mood selection
+  // =============================
   const pickEmoji = (mood) => {
     setEmojiMood(mood);
-    if (!selectedMoods.includes(mood)) setSelectedMoods(prev => [...prev, mood]);
+    if (!selectedMoods.includes(mood)) {
+      setSelectedMoods(prev => [...prev, mood]);
+    }
   };
 
+  // =============================
+  // Save mood to Firestore
+  // =============================
   const saveMood = async () => {
     try {
       const auth = getAuth();
       const user = auth.currentUser;
-      if (!user) { alert("User not logged in!"); return; }
+      if (!user) {
+        alert("User not logged in!");
+        return;
+      }
 
       await addDoc(collection(db, "mood"), {
         userId: user.uid,
@@ -124,53 +151,72 @@ const PhotoMoodPage = () => {
         detectionMethod: "Image upload / capture"
       });
 
-      setShowPopup(true);
-      setTimeout(() => { setShowPopup(false); navigate("/musicselector"); }, 1500);
+      // Stop camera automatically after saving
+      stopCamera();
 
+      setShowPopup(true);
+      setTimeout(() => {
+        setShowPopup(false);
+        navigate("/musicselector", { state: { detectedMood } });
+      }, 1500);
+
+      // Reset state
       setImage(null);
       setDetectedMood("");
       setSelectedMoods([]);
       setEmojiMood("");
       setNote("");
       setConfidence({});
+      setCapturedFromCamera(false);
     } catch (err) {
       console.error(err);
       alert("Failed to save mood");
     }
   };
 
+  // =============================
+  // JSX
+  // =============================
   return (
-    <div className="photo-mood-wrapper">
-      
-      {/* LEFT SECTION */}
-      <div className="left-section">
-        <h2>Photo Mood Detection</h2>
+    <div className="photo-mood-wrapper new-layout">
 
-        <div className="image-actions">
-          <div className="upload-capture card-hover">
+      {/* LEFT PANEL */}
+      <div className="left-panel">
+        <div className="section-header">
+          <h2>Photo Mood Detection</h2>
+        </div>
 
+        {/* UPLOAD */}
+        <div className="image-input-area card-hover">
+          <div className="upload-block">
             <h3>Upload Image</h3>
             <input type="file" accept="image/*" onChange={handleFileChange} />
-
-            <h3>Capture Photo</h3>
-            <video ref={videoRef} width="250" height="250" className="video-feed" />
-            <canvas ref={canvasRef} width="250" height="250" style={{ display: "none" }} />
-
-            <div className="btn-group">
-              <button className="btn" onClick={startCamera}>Start Camera</button>
-              <button className="btn" onClick={capturePhoto}>Capture Photo</button>
-              <button className="btn" onClick={stopCamera}>Stop Camera</button>
-              <button className="btn" onClick={retakePhoto}>Retake</button>
-            </div>
           </div>
 
-          {image && (
-            <div className="preview-wrapper card-hover">
-              <h4>Preview</h4>
-              <img src={image} alt="Preview" className="preview-image" />
+          {/* CAMERA */}
+          <div className="camera-block">
+            <h3>Capture Photo</h3>
+            <div className="camera-preview">
+              <video ref={videoRef} width="280" height="280" className="video-feed" />
+              <canvas ref={canvasRef} width="280" height="280" style={{ display: "none" }} />
             </div>
-          )}
+            <div className="camera-buttons">
+              <button className="btn" onClick={startCamera}>Start</button>
+              <button className="btn" onClick={capturePhoto}>Capture</button>
+              <button className="btn" onClick={stopCamera}>Stop</button>
+              {capturedFromCamera && (
+                <button className="btn" onClick={retakePhoto}>Retake</button>
+              )}
+            </div>
+          </div>
         </div>
+
+        {image && (
+          <div className="preview-card card-hover">
+            <h3>Preview</h3>
+            <img src={image} alt="Preview" className="preview-image" />
+          </div>
+        )}
 
         {loading && (
           <div className="spinner-container">
@@ -178,23 +224,35 @@ const PhotoMoodPage = () => {
             <p>Detecting mood...</p>
           </div>
         )}
-
       </div>
 
-      {/* RIGHT SECTION */}
-      <div className="right-section">
+      {/* RIGHT PANEL */}
+      <div className="right-panel">
+
         {detectedMood && (
-          <div className="detected-mood-section card-hover">
+          <div className="detected-card card-hover">
             <h3>Mood Detected: {detectedMood}</h3>
-            {Object.entries(confidence).map(([key, val]) => (
-              <div key={key} className="confidence-bar">
-                <span>{key}: {val}%</span>
-                <div className="confidence-fill" style={{ "--fill-width": `${val}%` }} />
-              </div>
-            ))}
+
+            <div className="confidence-list">
+              {Object.entries(confidence).map(([mood, value]) => (
+                <div key={mood} style={{ marginBottom: "10px" }}>
+                  <p style={{ margin: "0 0 4px 0", fontSize: "14px" }}>
+                    {mood} — {value}%
+                  </p>
+
+                  <div className="confidence-bar">
+                    <div
+                      className="confidence-fill"
+                      style={{ width: `${value}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
+        {/* Mood chip selection */}
         <div className="mood-chip-section card-hover">
           <h3>Select Mood(s)</h3>
           <div className="mood-chip-container">
@@ -203,8 +261,11 @@ const PhotoMoodPage = () => {
                 key={m}
                 className={`mood-chip ${selectedMoods.includes(m) ? "selected" : ""}`}
                 onClick={() => {
-                  if (selectedMoods.includes(m)) setSelectedMoods(selectedMoods.filter(chip => chip !== m));
-                  else setSelectedMoods([...selectedMoods, m]);
+                  if (selectedMoods.includes(m)) {
+                    setSelectedMoods(selectedMoods.filter(chip => chip !== m));
+                  } else {
+                    setSelectedMoods([...selectedMoods, m]);
+                  }
                 }}
               >
                 {m}
@@ -213,7 +274,8 @@ const PhotoMoodPage = () => {
           </div>
         </div>
 
-        <div className="emoji-selection card-hover">
+        {/* Emoji */}
+        <div className="emoji-section card-hover">
           <h3>Emoji Mood</h3>
           <div className="emoji-container">
             {emojiOptions.map(e => (
@@ -228,6 +290,7 @@ const PhotoMoodPage = () => {
           </div>
         </div>
 
+        {/* Note */}
         <div className="note-section card-hover">
           <h3>Add a Note</h3>
           <textarea

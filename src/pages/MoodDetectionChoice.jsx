@@ -125,7 +125,7 @@ const MoodDetectionChoice = () => {
             className="option"
             onClick={() => {
               playClickSound();
-              navigate("/live-camera");
+              navigate("/mood");
             }}
           >
             <div className="icon-circle">🎥</div>

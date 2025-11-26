@@ -26,7 +26,7 @@ export default function Home() {
           and help you improve your mental well-being, productivity, and self-awareness.
         </p>
         <Link to="/login" className="start-btn">Start Your Emotional Journey →</Link>
-        <div className="hero-img"></div>
+        
       </section>
 
       {/* PROBLEM SECTION */}
